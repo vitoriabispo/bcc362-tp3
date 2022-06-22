@@ -7,36 +7,41 @@ import java.util.Scanner;
 public class Broker {
 
     public Broker() {
-
         Scanner reader = new Scanner(System.in);  // Reading from System.in
         System.out.print("Enter the Broker port number: ");
         int port = reader.nextInt(); // Scans the next token of the input as an int.
 
-        System.out.print("Is the broker primary?: Y/N");
-        String respYN = reader.next();
+        System.out.print("Is the broker primary? (Y|N): ");
+        boolean isPrimary = reader.next().equalsIgnoreCase("Y");
 
-        System.out.print("Enter the secondary Broker address: ");
-        String secondAddress = reader.next();
+        String auxAdress;
+        int auxPort;
 
-        System.out.print("Enter the secondary Broker port number: ");
-        int secondPort = reader.nextInt();
+        if(isPrimary) { 
+            System.out.print("Enter the secundary Broker address: ");
+            auxAdress = reader.next();
 
-        boolean respBol;
-        if (respYN.equalsIgnoreCase("Y")) respBol = true;
-        else respBol = false;
+            System.out.print("Enter the secundary Broker port number: ");
+            auxPort = reader.nextInt();
+        }
+        else {
+            System.out.print("Enter the primary Broker address: ");
+            auxAdress = reader.next();
 
-        Server s = new Server(port, respBol, secondAddress, secondPort);
+            System.out.print("Enter the primary Broker port number: ");
+            auxPort = reader.nextInt();
+        }
 
-        ThreadWrapper brokerThread = new ThreadWrapper(s);
+        Server server = new Server(port, isPrimary, auxAdress, auxPort);
+        ThreadWrapper brokerThread = new ThreadWrapper(server);
         brokerThread.start();
 
-        System.out.print("Shutdown the broker (Y|N)?: ");
-        String resp = reader.next();
-        if (resp.equals("Y") || resp.equals("y")) {
+        System.out.print("Shutdown the broker? (Y|N): ");
+        boolean shutdown = reader.next().equalsIgnoreCase("Y");
+        if (shutdown) {
             System.out.println("Broker stopped...");
-            s.stop();
+            server.stop();
             brokerThread.interrupt();
-
         }
 
         //once finished
@@ -49,14 +54,14 @@ public class Broker {
     }
 
     class ThreadWrapper extends Thread {
-        Server s;
+        Server server;
 
-        public ThreadWrapper(Server s) {
-            this.s = s;
+        public ThreadWrapper(Server server) {
+            this.server = server;
         }
 
         public void run() {
-            s.begin();
+            server.begin();
         }
     }
 
