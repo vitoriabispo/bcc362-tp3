@@ -15,7 +15,7 @@ broker:
 	java appl.Broker
 
 client:
-	java appl.SingleUser
+	java appl.OneAppl
 
 .PHONY : clean
 clean:

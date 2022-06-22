@@ -8,8 +8,8 @@ import core.Message;
 public class OneAppl {
 
     public OneAppl() {
-        PubSubClient client = new PubSubClient();
-        client.startConsole();
+       // PubSubClient client = new PubSubClient();
+        // client.startConsole();
     }
 
     public OneAppl(boolean flag) {
@@ -17,55 +17,46 @@ public class OneAppl {
         PubSubClient debora = new PubSubClient("localhost", 8083);
         PubSubClient jonata = new PubSubClient("localhost", 8084);
 
-        joubert.subscribe("localhost", 8080);
-        Thread accessOne = new ThreadWrapper(joubert, "access Joubert- var X", "localhost", 8080);
+        char selected = 'X';
+        Thread accessOne;
+        Thread accessTwo;
+        Thread accessThree;
+        List<Message> logJoubert;
+        List<Message> logDebora;
+        List<Message> logJonata;
 
-        debora.subscribe("localhost", 8080);
-        jonata.subscribe("localhost", 8081);
+        joubert.subscribe("localhost", 8080, "localhost", 8081);        
+        debora.subscribe("localhost", 8080, "localhost", 8081);
+        jonata.subscribe("localhost", 8080, "localhost", 8081);
 
-        //accessOne = new ThreadWrapper(joubert, "access Joubert- var X", "localhost", 8080);
-        Thread accessTwo = new ThreadWrapper(debora, "access Debora- var X", "localhost", 8080);
-        Thread accessThree = new ThreadWrapper(jonata, "access Jonata- var X", "localhost", 8081);
-        accessOne.start();
-        accessTwo.start();
-        accessThree.start();
+        for (int i = 0; i < 100; i++) {
+            
+            accessOne = new ThreadWrapper(joubert, "joubert" + ":acquire:" + selected, "localhost", 8080);
+            accessTwo = new ThreadWrapper(debora, "debora" + ":acquire:" + selected, "localhost", 8080);
+            accessThree = new ThreadWrapper(jonata, "jonata" + ":acquire:" + selected, "localhost", 8081);
 
-        try {
-            accessTwo.join();
-            accessOne.join();
-            accessThree.join();
-        } catch (Exception e) {
+            accessOne.start();
+            accessTwo.start();
+            accessThree.start();
 
+            try {
+                accessTwo.join();
+                accessOne.join();
+                accessThree.join();
+            } catch (Exception e) {
+    
+            }
+
+            logJoubert = joubert.getLogMessages();
+            logDebora = debora.getLogMessages();
+            logJonata = jonata.getLogMessages();
+    
+            treatLog(logJoubert);
+            treatLog(logDebora);
+            treatLog(logJonata);
         }
 
 
-        List<Message> logJoubert = joubert.getLogMessages();
-        List<Message> logDebora = debora.getLogMessages();
-        List<Message> logJonata = jonata.getLogMessages();
-
-        Iterator<Message> it = logJoubert.iterator();
-        System.out.print("Log Joubert itens: ");
-        while (it.hasNext()) {
-            Message aux = it.next();
-            System.out.print(aux.getContent() + aux.getLogId() + " | ");
-        }
-        System.out.println();
-
-        it = logJonata.iterator();
-        System.out.print("Log Jonata itens: ");
-        while (it.hasNext()) {
-            Message aux = it.next();
-            System.out.print(aux.getContent() + aux.getLogId() + " | ");
-        }
-        System.out.println();
-
-        it = logDebora.iterator();
-        System.out.print("Log Debora itens: ");
-        while (it.hasNext()) {
-            Message aux = it.next();
-            System.out.print(aux.getContent() + aux.getLogId() + " | ");
-        }
-        System.out.println();
 
         joubert.unsubscribe("localhost", 8080);
         debora.unsubscribe("localhost", 8080);
@@ -75,6 +66,18 @@ public class OneAppl {
         debora.stopPubSubClient();
         jonata.stopPubSubClient();
     }
+
+    private void treatLog(List<Message> logUser) {
+		// aqui existe toda a logica do protocolo do TP2
+		// se permanece neste metodo ate que o acesso a VAR X ou VAR Y ou VAR Z ocorra
+		Iterator<Message> it = logUser.iterator();
+		System.out.print("Log User itens: ");
+		while (it.hasNext()) {
+			Message aux = it.next();
+			System.out.print(aux.getContent() + aux.getLogId() + " | ");
+		}
+		System.out.println();
+	}
 
     public static void main(String[] args) {
         // TODO Auto-generated method stub

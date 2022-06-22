@@ -12,12 +12,12 @@ public class Client {
 
     private Socket s;
 
-    public Client(String ip, int port) {
+    public Client(String ip, int port) throws Exception {
         try {
             s = new Socket(ip, port);
-        } catch (Exception e) {
-            System.out.println("Client cannot connect with " + ip + " on port: " + port);
-
+        } catch(Exception e) {
+            System.out.println("[CLIENT] Client cannot connect with " + ip + " on port: " + port);
+            throw new Exception("Client cannot connect", e);
         }
     }
 

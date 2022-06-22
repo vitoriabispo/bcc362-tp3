@@ -49,13 +49,17 @@ public class PubCommand implements PubSubCommand {
         CopyOnWriteArrayList<String> subscribersCopy = new CopyOnWriteArrayList<String>();
         subscribersCopy.addAll(subscribers);
         for (String aux : subscribersCopy) {
-            String[] ipAndPort = aux.split(":");
-            Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
-            msg.setBrokerId(m.getBrokerId());
-            Message cMsg = client.sendReceive(msg);
-            if (cMsg == null) {
-                System.out.println("Notify of publish service is not proceed... " + msg.getContent());
-                subscribers.remove(aux);
+            try {
+                String[] ipAndPort = aux.split(":");
+                Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
+                msg.setBrokerId(m.getBrokerId());
+                Message cMsg = client.sendReceive(msg);
+                if (cMsg == null) {
+                    System.out.println("Notify of publish service is not proceed... " + msg.getContent());
+                    subscribers.remove(aux);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
