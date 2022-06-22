@@ -1,8 +1,0 @@
-make.exe --dry-run --always-make --keep-going --print-directory
-make: Entering directory 'c:/Users/vivib/Documents/Universidade/21.2/SistemasDistribuidos/TPS/TP3/bcc362-tp3/src'
- 
-Arquivo n�o encontrado  - *.java
-
-echo Build Completed
-make: Leaving directory 'c:/Users/vivib/Documents/Universidade/21.2/SistemasDistribuidos/TPS/TP3/bcc362-tp3/src'
- 
