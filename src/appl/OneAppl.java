@@ -47,6 +47,22 @@ public class OneAppl {
     
             }
 
+            accessOne = new ThreadWrapper(joubert, "joubert" + ":release:" + selected, "localhost", 8080);
+            accessTwo = new ThreadWrapper(debora, "debora" + ":release:" + selected, "localhost", 8080);
+            accessThree = new ThreadWrapper(jonata, "jonata" + ":release:" + selected, "localhost", 8080);
+
+            accessOne.start();
+            accessTwo.start();
+            accessThree.start();
+
+            try {
+                accessTwo.join();
+                accessOne.join();
+                accessThree.join();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             logJoubert = joubert.getLogMessages();
             logDebora = debora.getLogMessages();
             logJonata = jonata.getLogMessages();
@@ -54,6 +70,13 @@ public class OneAppl {
             treatLog(logJoubert);
             treatLog(logDebora);
             treatLog(logJonata);
+
+            try {
+                int wait = getRandomInteger(100, 500);
+                Thread.sleep(wait);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+            }
         }
 
         joubert.unsubscribe("localhost", 8080);
@@ -75,6 +98,10 @@ public class OneAppl {
 			System.out.print(aux.getContent() + aux.getLogId() + " | ");
 		}
 		System.out.println();
+	}
+
+    public int getRandomInteger(int minimum, int maximum) {
+		return ((int) (Math.random() * (maximum - minimum))) + minimum;
 	}
 
     public static void main(String[] args) {
