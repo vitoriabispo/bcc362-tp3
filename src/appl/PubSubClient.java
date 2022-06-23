@@ -19,8 +19,10 @@ public class PubSubClient {
 
     private String brokerAddress;
     private int brokerPort;
-    private String backupAddress;
-    private int backupPort;
+    private String backupAddress = null;
+    private int backupPort = 0;
+
+    private boolean isPrimary = true;
 
     public PubSubClient() {
         //this constructor must be called only when the method
@@ -38,43 +40,57 @@ public class PubSubClient {
 
     public void subscribe(String brokerAddress, int brokerPort, String backupAddress, int backupPort) {
 
+        this.brokerAddress = brokerAddress;
+        this.brokerPort = brokerPort;
+
+        this.backupAddress = backupAddress;
+        this.backupPort = backupPort;
+
         try {
             Message msgBroker = new MessageImpl();
             msgBroker.setBrokerId(brokerPort);
             msgBroker.setType("sub");
-            msgBroker.setContent(clientAddress + ":" + clientPort);
-            Client subscriber = new Client(brokerAddress, brokerPort);
+            msgBroker.setContent(clientAddress+":"+clientPort);
+            Client subscriber = new Client(brokerAddress, brokerPort, null);
             Message response = subscriber.sendReceive(msgBroker);
-            if (response.getType().equals("backup")) {
+            if(response != null && response.getType().equals("backup")){			
                 brokerAddress = response.getContent().split(":")[0];
                 brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
-                subscriber = new Client(brokerAddress, brokerPort);
+                subscriber = new Client(brokerAddress, brokerPort, null);
                 subscriber.sendReceive(msgBroker);
             }
+
+            Client subscriberBackup = new Client(brokerAddress, brokerPort, null);
+            Message msgBrokerBackup = new MessageImpl();
+            msgBrokerBackup.setBrokerId(brokerPort);
+            msgBrokerBackup.setType("giveMeSec");
+            msgBrokerBackup.setContent(clientAddress+":"+clientPort);
+            Message responseInfos = subscriberBackup.sendReceive(msgBrokerBackup);
+
+            if (responseInfos != null) {
+                this.backupPort = responseInfos.getBrokerId();
+                this.backupAddress = responseInfos.getContent();
+                System.out.println("backUpAddress: " + backupAddress);
+            }
     
-            this.brokerAddress = brokerAddress;
-            this.brokerPort = brokerPort;
-            this.backupAddress = backupAddress;
-            this.backupPort = backupPort;
         }  catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public void unsubscribe(String brokerAddress, int brokerPort) {
-
         try {
             Message msgBroker = new MessageImpl();
             msgBroker.setBrokerId(brokerPort);
             msgBroker.setType("unsub");
             msgBroker.setContent(clientAddress + ":" + clientPort);
-            Client subscriber = new Client(brokerAddress, brokerPort);
+            Client subscriber = new Client(brokerAddress, brokerPort, null);
             Message response = subscriber.sendReceive(msgBroker);
     
-            if (response.getType().equals("backup")) {
+            if (response != null && response.getType().equals("backup")) {
                 brokerAddress = response.getContent().split(":")[0];
                 brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
-                subscriber = new Client(brokerAddress, brokerPort);
+                subscriber = new Client(brokerAddress, brokerPort, null);
                 subscriber.sendReceive(msgBroker);
             }
         }  catch (Exception e) {
@@ -83,6 +99,11 @@ public class PubSubClient {
     }
 
     public void publish(String message, String brokerAddress, int brokerPort) {
+
+        if (!isPrimary) {
+			brokerAddress = this.backupAddress;
+			brokerPort = this.backupPort;
+		}
         
         try {
             Message msgPub = new MessageImpl();
@@ -90,61 +111,41 @@ public class PubSubClient {
             msgPub.setType("pub");
             msgPub.setContent(message);
             
-            Client publisher = new Client(brokerAddress, brokerPort);
+            Client publisher = new Client(brokerAddress, brokerPort, () -> {
+                this.isPrimary = false;
+    
+                subscribe(backupAddress, backupPort, backupAddress, backupPort);
+                try {
+                    Client publisher2 = new Client(backupAddress, backupPort, null);
+                    Message msgPubAux = new MessageImpl();
+                    msgPubAux.setBrokerId(backupPort);
+                    msgPubAux.setType("updatePrimary");
+                    msgPubAux.setContent(message);
+
+                    Message response = publisher2.sendReceive(msgPubAux);
+
+                    if(response != null && response.getType().equals("backup")){
+                        this.brokerAddress = response.getContent().split(":")[0];
+                        this.brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
+                        publisher2 = new Client(this.brokerAddress, this.brokerPort, null);
+                        publisher2.sendReceive(msgPub);
+                    }
+                } catch (Exception e) {
+                    System.out.println("[CLIENT] Client cannot connect with ");
+                }
+               
+            });
 
             Message response = publisher.sendReceive(msgPub);
 
-            if (response.getType().equals("backup")) {
+            if (response != null && response.getType().equals("backup")) {
                 brokerAddress = response.getContent().split(":")[0];
                 brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
-                publisher = new Client(brokerAddress, brokerPort);
+                publisher = new Client(brokerAddress, brokerPort, null);
                 publisher.sendReceive(msgPub);
             }
         }  catch (Exception e) {
-            String messageError = e.getMessage();
-            if(messageError.equals("Client cannot connect")) {
-                try {
-                    System.out.println("Client cannot connect, change to secondary: " + backupAddress + ":" + backupPort);
-
-                    Message msgBroker = new MessageImpl();
-                    msgBroker.setBrokerId(brokerPort);
-                    msgBroker.setContent("Backup becomes primary: " + backupAddress + ":" + backupPort);
-                    msgBroker.setType("syncNewPrimary");
-
-                    Client clientBackup = new Client(backupAddress, backupPort);
-                    clientBackup.sendReceive(msgBroker);
-
-                    // Troca os endereços do broker
-                    brokerAddress = backupAddress;
-                    brokerPort = backupPort;
-
-                    // Espera um tempo para poder reenviar o pub
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException se) {
-                        se.printStackTrace();
-                    }
-
-                    Message msgPub = new MessageImpl();
-                    msgPub.setBrokerId(brokerPort);
-                    msgPub.setType("pub");
-                    msgPub.setContent(message);
-
-                    Client publisher = new Client(brokerAddress, brokerPort);
-                    Message response = publisher.sendReceive(msgPub);
-
-                    if (response != null) {
-                        if(response.getType().equals("backup")){
-                            brokerAddress = response.getContent().split(":")[0];
-                            brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
-                            publisher = new Client(brokerAddress, brokerPort);
-                            publisher.sendReceive(msgPub);
-                        }
-                    }
-                }  catch (Exception e2) {
-                    System.out.println("[CLIENT 2] Client cannot connect with ");
-                }
-            } 
+                System.out.println("[CLIENT] Client cannot connect with ");
         }
     }
 

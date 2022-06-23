@@ -44,11 +44,18 @@ public class PubSubConsumer<S extends Socket> extends GenericConsumer<S> {
 
             Message response = null;
 
-            if (!isPrimary && !msg.getType().startsWith("sync")) {
+            if (msg.getType().equals("giveMeSec")) {
+				response = commands.get(msg.getType()).execute(msg, log, subscribers, isPrimary, secondaryServer, secondaryPort);
+			} else if (!isPrimary && msg.getType().equals("updatePrimary")) {
+				this.isPrimary = true;
+				this.secondaryPort = -1;
+				this.secondaryServer = null;
 
-                //Client client = new Client(secondaryServer, secondaryPort);
-                //response = client.sendReceive(msg);
-
+				//System.out.println("updatePrimary if");
+			} else if (isPrimary && msg.getType().equals("updatePrimary")) {
+				msg.setType("pub");
+			}
+            else if (!isPrimary && !msg.getType().startsWith("sync")) {
                 response = new MessageImpl();
                 response.setType("backup");
                 response.setContent(secondaryServer + ":" + secondaryPort);

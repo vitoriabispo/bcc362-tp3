@@ -33,7 +33,7 @@ public class OneAppl {
             
             accessOne = new ThreadWrapper(joubert, "joubert" + ":acquire:" + selected, "localhost", 8080);
             accessTwo = new ThreadWrapper(debora, "debora" + ":acquire:" + selected, "localhost", 8080);
-            accessThree = new ThreadWrapper(jonata, "jonata" + ":acquire:" + selected, "localhost", 8081);
+            accessThree = new ThreadWrapper(jonata, "jonata" + ":acquire:" + selected, "localhost", 8080);
 
             accessOne.start();
             accessTwo.start();

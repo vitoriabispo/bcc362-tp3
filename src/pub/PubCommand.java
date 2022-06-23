@@ -29,7 +29,7 @@ public class PubCommand implements PubSubCommand {
             syncPubMsg.setLogId(m.getLogId());
             syncPubMsg.setType("syncPub");
 
-            Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort);
+            Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort, null);
             syncPubMsg = clientBackup.sendReceive(syncPubMsg);
             System.out.println(syncPubMsg.getContent());
 
@@ -51,7 +51,7 @@ public class PubCommand implements PubSubCommand {
         for (String aux : subscribersCopy) {
             try {
                 String[] ipAndPort = aux.split(":");
-                Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
+                Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]), null);
                 msg.setBrokerId(m.getBrokerId());
                 Message cMsg = client.sendReceive(msg);
                 if (cMsg == null) {

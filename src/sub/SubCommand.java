@@ -33,7 +33,7 @@ public class SubCommand implements PubSubCommand {
                 syncSubMsg.setLogId(m.getLogId());
                 syncSubMsg.setType("syncSub");
 
-                Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort);
+                Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort, null);
                 syncSubMsg = clientBackup.sendReceive(syncSubMsg);
                 System.out.println(syncSubMsg.getContent());
 
@@ -54,7 +54,7 @@ public class SubCommand implements PubSubCommand {
                 String[] ipAndPort = m.getContent().split(":");
                 while (it.hasNext()) {
                     try {
-                        Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
+                        Client client = new Client(ipAndPort[0], Integer.parseInt(ipAndPort[1]), null);
                         Message msg = it.next();
                         Message aux = new MessageImpl();
                         aux.setType("notify");

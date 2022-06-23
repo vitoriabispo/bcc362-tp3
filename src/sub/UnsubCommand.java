@@ -32,7 +32,7 @@ public class UnsubCommand implements PubSubCommand {
                 syncUnsubMsg.setLogId(m.getLogId());
                 syncUnsubMsg.setType("syncUnsub");
 
-                Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort);
+                Client clientBackup = new Client(sencondaryServerAddress, secondaryServerPort, null);
                 syncUnsubMsg = clientBackup.sendReceive(syncUnsubMsg);
                 System.out.println(syncUnsubMsg.getContent());
 
