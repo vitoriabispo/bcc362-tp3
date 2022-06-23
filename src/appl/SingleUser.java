@@ -39,14 +39,28 @@ public class SingleUser {
 
 		PubSubClient user = new PubSubClient("localhost", userPort);
 
-		user.subscribe("localhost", 8080, "localhost", 8080);
+		boolean connectOnPrimary = getRandomInteger(0, 100) % 2 == 0;
 
-		startTP2(user, userName, 8080, "localhost");
+		String brokerAddress = "localhost";
+		int brokerPort = 8080;
+		String brokerUpAddress = "localhost";
+		int brokerUpPort = 8081;
+
+		if(connectOnPrimary) {
+			brokerAddress = "localhost";
+			brokerPort = 8081;
+			brokerUpAddress = "localhost";
+			brokerUpPort = 8080;
+		}
+
+		user.subscribe(brokerAddress, brokerPort, brokerUpAddress, brokerUpPort);
+
+		startTP2(user, userName, brokerAddress, brokerPort);
 
 		reader.close();
 	}
 
-	private void startTP2(PubSubClient user, String userName, int brokerPort, String brokerAdd) {
+	private void startTP2(PubSubClient user, String userName, String brokerAdd,  int brokerPort) {
 		System.out.println("User " + userName + " entered the system!\n");
 		Thread sendOneMsg;
 

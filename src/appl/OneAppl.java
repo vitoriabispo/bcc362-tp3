@@ -56,8 +56,6 @@ public class OneAppl {
             treatLog(logJonata);
         }
 
-
-
         joubert.unsubscribe("localhost", 8080);
         debora.unsubscribe("localhost", 8080);
         jonata.unsubscribe("localhost", 8080);

@@ -17,6 +17,9 @@ broker:
 client:
 	java appl.OneAppl
 
+client-single:
+	java appl.SingleUser
+
 .PHONY : clean
 clean:
 	find . -type f -name '*.class' -delete
