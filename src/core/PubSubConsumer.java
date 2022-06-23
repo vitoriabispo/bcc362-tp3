@@ -44,9 +44,7 @@ public class PubSubConsumer<S extends Socket> extends GenericConsumer<S> {
 
             Message response = null;
 
-            if (msg.getType().equals("giveMeSec")) {
-				response = commands.get(msg.getType()).execute(msg, log, subscribers, isPrimary, secondaryServer, secondaryPort);
-			} else if (!isPrimary && msg.getType().equals("updatePrimary")) {
+            if (!isPrimary && msg.getType().equals("updatePrimary")) {
 				this.isPrimary = true;
 				this.secondaryPort = -1;
 				this.secondaryServer = null;

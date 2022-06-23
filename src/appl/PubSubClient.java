@@ -59,19 +59,6 @@ public class PubSubClient {
                 subscriber = new Client(brokerAddress, brokerPort, null);
                 subscriber.sendReceive(msgBroker);
             }
-
-            Client subscriberBackup = new Client(brokerAddress, brokerPort, null);
-            Message msgBrokerBackup = new MessageImpl();
-            msgBrokerBackup.setBrokerId(brokerPort);
-            msgBrokerBackup.setType("giveMeSec");
-            msgBrokerBackup.setContent(clientAddress+":"+clientPort);
-            Message responseInfos = subscriberBackup.sendReceive(msgBrokerBackup);
-
-            if (responseInfos != null) {
-                this.backupPort = responseInfos.getBrokerId();
-                this.backupAddress = responseInfos.getContent();
-                System.out.println("backUpAddress: " + backupAddress);
-            }
     
         }  catch (Exception e) {
             e.printStackTrace();
