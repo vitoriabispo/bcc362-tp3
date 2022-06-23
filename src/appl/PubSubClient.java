@@ -102,23 +102,19 @@ public class PubSubClient {
                 this.isPrimary = false;
     
                 subscribe(backupAddress, backupPort, backupAddress, backupPort);
-                try {
-                    Client publisher2 = new Client(backupAddress, backupPort, null);
-                    Message msgPubAux = new MessageImpl();
-                    msgPubAux.setBrokerId(backupPort);
-                    msgPubAux.setType("updatePrimary");
-                    msgPubAux.setContent(message);
+                Client publisher2 = new Client(backupAddress, backupPort, null);
+                Message msgPubAux = new MessageImpl();
+                msgPubAux.setBrokerId(backupPort);
+                msgPubAux.setType("updatePrimary");
+                msgPubAux.setContent(message);
 
-                    Message response = publisher2.sendReceive(msgPubAux);
+                Message response = publisher2.sendReceive(msgPubAux);
 
-                    if(response != null && response.getType().equals("backup")){
-                        this.brokerAddress = response.getContent().split(":")[0];
-                        this.brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
-                        publisher2 = new Client(this.brokerAddress, this.brokerPort, null);
-                        publisher2.sendReceive(msgPub);
-                    }
-                } catch (Exception e) {
-                    System.out.println("[CLIENT] Client cannot connect with ");
+                if(response != null && response.getType().equals("backup")){
+                    this.brokerAddress = response.getContent().split(":")[0];
+                    this.brokerPort = Integer.parseInt(response.getContent().split(":")[1]);
+                    publisher2 = new Client(this.brokerAddress, this.brokerPort, null);
+                    publisher2.sendReceive(msgPub);
                 }
                
             });
